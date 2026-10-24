@@ -51,38 +51,52 @@
   function repoKey(item,byNorm){
     const repo=String(item.repository_url||'').split('/').pop();return byNorm[norm(repo)]||null;
   }
+  async function fetchRepoItems(path){
+    const out=[];
+    for(let page=1;page<=100;page++){
+      const chunk=await api(path+(path.includes('?')?'&':'?')+'per_page=100&page='+page);
+      out.push(...chunk);
+      if(chunk.length<100) break;
+    }
+    return out;
+  }
+
   async function sync(manual){
-    const user=state.cfg.user;if(!user){if(manual)setStatus('Escribe tu usuario de GitHub primero.',true);return;}
-    if(syncing)return;syncing=true;$('syncBtn').disabled=true;setStatus('Consultando issues y pull requests…');state.errors={};
+    const user=state.cfg.user;
+    if(!user){if(manual)setStatus('Escribe tu usuario de GitHub primero.',true);return;}
+    if(syncing)return;
+    syncing=true;$('syncBtn').disabled=true;setStatus('Consultando issues y pull requests…');state.errors={};
     try{
-      // Tres búsquedas globales reducen el consumo de la API frente a consultar cada repositorio por separado.
-      const [assignedItems,openPrItems,mergedPrItems]=await Promise.all([
-        fetchAll('org:'+OWNER+' is:issue assignee:'+user),
-        fetchAll('org:'+OWNER+' is:pr is:open author:'+user),
-        fetchAll('org:'+OWNER+' is:pr is:merged')
-      ]);
-      const byNorm=Object.fromEntries(Object.entries(REPOS).map(([label,real])=>[norm(real),label]));
-      const mergedByRepo={};names.forEach(n=>mergedByRepo[n]=new Map());
-      const mergedCount=Object.fromEntries(names.map(n=>[n,0]));
-      for(const pr of mergedPrItems){
-        const label=repoKey(pr,byNorm);if(!label)continue;
-        if(pr.user?.login?.toLowerCase()===user.toLowerCase())mergedCount[label]++;
-        for(const num of closingRefs((pr.title||'')+'\n'+(pr.body||''),REPOS[label]))mergedByRepo[label].set(num,pr);
-      }
       const newRepos={},detail=[];
+      let totalAssigned=0,totalReview=0,totalMerged=0;
       for(const label of names){
-        const assigned=assignedItems.filter(x=>repoKey(x,byNorm)===label);
-        const open=assigned.filter(x=>x.state==='open'),closed=assigned.filter(x=>x.state==='closed');
-        const openPrs=openPrItems.filter(x=>repoKey(x,byNorm)===label);
-        const links=mergedByRepo[label],done=closed.filter(issue=>links.has(issue.number)),doneSet=new Set(done.map(x=>x.number));
-        newRepos[label]={done:done.length,assigned:open.length,review:openPrs.length,merged:mergedCount[label]};
-        for(const issue of done){const pr=links.get(issue.number);detail.push({number:issue.number,title:issue.title,url:issue.html_url,repo:label,status:'done',statusLabel:'Resuelto verificado',prUrl:pr.html_url});}
-        for(const issue of closed.filter(x=>!doneSet.has(x.number)))detail.push({number:issue.number,title:issue.title,url:issue.html_url,repo:label,status:'closed-unverified',statusLabel:'Cerrado · PR no verificado',prUrl:''});
-        for(const issue of open)detail.push({number:issue.number,title:issue.title,url:issue.html_url,repo:label,status:'pending',statusLabel:'Pendiente',prUrl:''});
-        for(const pr of openPrs)detail.push({number:pr.number,title:pr.title,url:pr.html_url,repo:label,status:'review',statusLabel:'PR abierto/en revisión',prUrl:''});
+        const repoName=REPOS[label];
+        try{
+          const [closedIssues,openIssues,openPrs,closedPrs]=await Promise.all([
+            fetchRepoItems('/repos/'+OWNER+'/'+repoName+'/issues?state=closed&assignee='+encodeURIComponent(user)),
+            fetchRepoItems('/repos/'+OWNER+'/'+repoName+'/issues?state=open&assignee='+encodeURIComponent(user)),
+            fetchRepoItems('/repos/'+OWNER+'/'+repoName+'/pulls?state=open'),
+            fetchRepoItems('/repos/'+OWNER+'/'+repoName+'/pulls?state=closed')
+          ]);
+          const completed=closedIssues.filter(x=>!x.pull_request);
+          const pending=openIssues.filter(x=>!x.pull_request);
+          const review=openPrs.filter(x=>x.user?.login?.toLowerCase()===user.toLowerCase());
+          const merged=closedPrs.filter(x=>x.merged_at&&x.user?.login?.toLowerCase()===user.toLowerCase());
+          newRepos[label]={done:completed.length,assigned:pending.length,review:review.length,merged:merged.length};
+          totalAssigned+=pending.length;totalReview+=review.length;totalMerged+=merged.length;
+          for(const issue of completed)detail.push({number:issue.number,title:issue.title,url:issue.html_url,repo:label,status:'done',statusLabel:'Issue cerrado',prUrl:''});
+          for(const issue of pending)detail.push({number:issue.number,title:issue.title,url:issue.html_url,repo:label,status:'pending',statusLabel:'Issue asignado pendiente',prUrl:''});
+          for(const pr of review)detail.push({number:pr.number,title:pr.title,url:pr.html_url,repo:label,status:'review',statusLabel:'PR abierto/en revisión',prUrl:''});
+        }catch(e){
+          state.errors[label]=e.message;
+          newRepos[label]=state.repos[label]||{done:0,assigned:0,review:0,merged:0};
+        }
       }
+      if(names.every(n=>state.errors[n]))throw new Error('No se pudo consultar ningún repositorio. Revisa el usuario, los nombres de repositorio o el token.');
       state.repos=newRepos;state.detail=detail;state.syncedAt=Date.now();persist();render();
-      setStatus('✓ Sincronización completada');if(manual)toast('Datos actualizados correctamente.');
+      const errors=names.filter(n=>state.errors[n]).length;
+      setStatus(errors?'Sincronizado parcialmente: '+errors+' repositorio(s) dieron error.':'✓ Sincronización completada',!!errors);
+      if(manual&&!errors)toast('Datos actualizados correctamente.');
     }catch(e){setStatus(e.message,true);}
     finally{syncing=false;$('syncBtn').disabled=false;}
   }

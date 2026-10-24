@@ -28,7 +28,7 @@
   }
   const repoApi=(repo,path)=>api('/repos/'+OWNER+'/'+repo+path);
   // Recorre páginas para no perder issues o PR antiguos.
-  async function repoApiAll(repo,path,maxPages){
+  async function repoApiAll(repo,path,maxPages=Infinity){
     const out=[];
     for(let page=1;page<=maxPages;page++){
       const separator=path.includes('?')?'&':'?';
@@ -82,13 +82,13 @@
     setStatus('Consultando repositorios…');
     state.errors={};
     try{
-      await checkRate();
       const newRepos={},detailByRepo={};
       for(const label of names){
         const repo=REPOS[label];
         try{
-          const [issues,closedPrs,openPrs]=await Promise.all([
+          const [assignedIssues,closedIssues,closedPrs,openPrs]=await Promise.all([
             repoApiAll(repo,'/issues?state=all&assignee='+encodeURIComponent(user),5),
+            repoApiAll(repo,'/issues?state=closed'),
             repoApiAll(repo,'/pulls?state=closed&sort=updated&direction=desc',6),
             repoApi(repo,'/pulls?state=open&per_page=100&sort=updated&direction=desc')
           ]);
@@ -98,21 +98,18 @@
           for(const pr of mergedPrs){
             for(const num of closingRefs((pr.title||'')+'\n'+(pr.body||''),repo))links.set(num,pr);
           }
-          const assignedIssues=issues.filter(x=>!x.pull_request);
-          const closed=assignedIssues.filter(x=>x.state==='closed');
-          const open=assignedIssues.filter(x=>x.state==='open');
+          const allClosedIssues=closedIssues.filter(x=>!x.pull_request&&x.state==='closed');
+          const personalIssues=assignedIssues.filter(x=>!x.pull_request);
+          const open=personalIssues.filter(x=>x.state==='open');
           const verified=closed.filter(issue=>links.has(issue.number));
           const verifiedSet=new Set(verified.map(x=>x.number));
           const myOpenPrs=openPrs.filter(pr=>pr.user?.login?.toLowerCase()===user.toLowerCase());
           const myMergedPrs=mergedPrs.filter(pr=>pr.user?.login?.toLowerCase()===user.toLowerCase());
           // El contador suma todos los issues cerrados asignados al usuario.
-          newRepos[label]={done:closed.length,assigned:open.length,review:myOpenPrs.length,merged:myMergedPrs.length};
-          for(const issue of verified){
+          newRepos[label]={done:allClosedIssues.length,assigned:open.length,review:myOpenPrs.length,merged:myMergedPrs.length};
+          for(const issue of allClosedIssues){
             const pr=links.get(issue.number);
-            detail.push({number:issue.number,title:issue.title,url:issue.html_url,repo:label,status:'done',statusLabel:'Cerrado · PR fusionado',prUrl:pr.html_url});
-          }
-          for(const issue of closed.filter(x=>!verifiedSet.has(x.number))){
-            detail.push({number:issue.number,title:issue.title,url:issue.html_url,repo:label,status:'closed-unverified',statusLabel:'Cerrado (sin PR enlazado)',prUrl:''});
+            detail.push({number:issue.number,title:issue.title,url:issue.html_url,repo:label,status:'done',statusLabel:pr?'Issue cerrado · PR fusionado':'Issue cerrado',prUrl:pr?pr.html_url:''});
           }
           for(const issue of open){
             detail.push({number:issue.number,title:issue.title,url:issue.html_url,repo:label,status:'pending',statusLabel:'Pendiente',prUrl:''});

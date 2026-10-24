@@ -18,7 +18,7 @@
   </header>
 
   <section class="stats">
-    <div class="stat"><div class="label">ISSUES CERRADOS ASIGNADOS A TI</div><div class="num" id="total">0</div><div class="hint" id="syncedAt">Sin sincronizar</div></div>
+    <div class="stat"><div class="label">TOTAL DE ISSUES CERRADOS</div><div class="num" id="total">0</div><div class="hint" id="syncedAt">Sin sincronizar</div></div>
     <div class="stat"><div class="label">FALTAN PARA 40</div><div class="num" id="remaining">40</div><div class="hint" id="goalHint">Issues para alcanzar el mínimo</div><div class="progress"><div class="bar" id="progress"></div></div></div>
     <div class="stat"><div class="label">PROGRESO</div><div class="num" id="percent">0%</div><div class="hint">Avance respecto al objetivo de 40</div></div>
   </section>
@@ -29,7 +29,7 @@
     <div class="quickstat"><span class="quick-icon">✓</span><div><div class="label">PR FUSIONADOS POR TI</div><div class="quick-num" id="merged">0</div></div></div>
   </section>
 
-  <div class="sectionhead"><h2>Resumen por repositorio</h2><p>El contador suma los issues asignados a tu usuario que están cerrados. El explorador distingue cuáles tienen un PR fusionado enlazado y cuáles no.</p></div>
+  <div class="sectionhead"><h2>Resumen por repositorio</h2><p>El contador suma todos los issues cerrados de cada repositorio, estén asignados a ti o no.</p></div>
   <section class="repos" id="repos"></section>
 
   <section class="panel">
@@ -41,14 +41,7 @@
     <div id="detailList" class="issue-list"><p class="empty">Conecta tu usuario de GitHub y sincroniza para ver los datos.</p></div>
   </section>
 
-  <details class="panel">
-    <summary>¿Cómo se calcula el progreso?</summary>
-    <div class="explain">
-      <p><strong>Cuenta 1 issue:</strong> el issue está asignado a tu usuario y está cerrado, aunque no se encuentre un PR enlazado.</p>
-      <p><strong>El explorador distingue:</strong> “Cerrado · PR fusionado” cuando se reconoce una referencia de cierre en un PR fusionado, y “Cerrado (sin PR enlazado)” cuando no se encuentra esa referencia.</p>
-      <p class="note">Las referencias reconocidas incluyen <code>Fixes #123</code>, <code>Closes: #123, #124</code> y <code>Resolves #123</code>. Se revisan hasta 500 issues asignados y 600 PR cerrados por repositorio.</p>
-    </div>
-  </details>
+s>
 
   <section class="panel">
     <h2>Conexión con GitHub</h2>

@@ -18,7 +18,7 @@
   </header>
 
   <section class="stats">
-    <div class="stat"><div class="label">ISSUES RESUELTOS VERIFICADOS</div><div class="num" id="total">0</div><div class="hint" id="syncedAt">Sin sincronizar</div></div>
+    <div class="stat"><div class="label">ISSUES CERRADOS ASIGNADOS A TI</div><div class="num" id="total">0</div><div class="hint" id="syncedAt">Sin sincronizar</div></div>
     <div class="stat"><div class="label">FALTAN PARA 40</div><div class="num" id="remaining">40</div><div class="hint" id="goalHint">Issues para alcanzar el mínimo</div><div class="progress"><div class="bar" id="progress"></div></div></div>
     <div class="stat"><div class="label">PROGRESO</div><div class="num" id="percent">0%</div><div class="hint">Avance respecto al objetivo de 40</div></div>
   </section>
@@ -29,14 +29,14 @@
     <div class="quickstat"><span class="quick-icon">✓</span><div><div class="label">PR FUSIONADOS POR TI</div><div class="quick-num" id="merged">0</div></div></div>
   </section>
 
-  <div class="sectionhead"><h2>Resumen por repositorio</h2><p>El contador de resueltos solo incluye issues asignados a tu usuario, cerrados y relacionados con un PR fusionado.</p></div>
+  <div class="sectionhead"><h2>Resumen por repositorio</h2><p>El contador suma los issues asignados a tu usuario que están cerrados. El explorador distingue cuáles tienen un PR fusionado enlazado y cuáles no.</p></div>
   <section class="repos" id="repos"></section>
 
   <section class="panel">
     <div class="panel-heading"><div><h2>Explorador de issues y PRs</h2><p class="desc">Busca por título, número o repositorio y filtra por estado. Cada enlace abre el elemento original en GitHub.</p></div><span class="result-count" id="detailCount">0 resultados</span></div>
     <div class="filters">
       <div class="setting"><label for="filterText">BUSCAR</label><input id="filterText" placeholder="Ej. documentación, #123, CHUSPAPULSE" autocomplete="off"></div>
-      <div class="setting"><label for="filterStatus">ESTADO</label><select id="filterStatus"><option value="all">Todos los estados</option><option value="done">Resueltos verificados</option><option value="pending">Issues pendientes</option><option value="review">PR abiertos/en revisión</option><option value="closed-unverified">Cerrados sin PR verificado</option></select></div>
+      <div class="setting"><label for="filterStatus">ESTADO</label><select id="filterStatus"><option value="all">Todos los estados</option><option value="done">Todos los issues cerrados</option><option value="pending">Issues pendientes</option><option value="review">PR abiertos/en revisión</option><option value="closed-unverified">Cerrados sin PR verificado</option></select></div>
     </div>
     <div id="detailList" class="issue-list"><p class="empty">Conecta tu usuario de GitHub y sincroniza para ver los datos.</p></div>
   </section>
@@ -44,21 +44,21 @@
   <details class="panel">
     <summary>¿Cómo se calcula el progreso?</summary>
     <div class="explain">
-      <p><strong>Cuenta 1 issue:</strong> el issue está asignado a tu usuario, está cerrado y se encuentra una referencia de cierre estándar en un PR fusionado del mismo repositorio (por ejemplo, <code>Fixes #123</code>, <code>Closes #123</code> o <code>Resolves #123</code>).</p>
-      <p><strong>No suma todavía:</strong> issues abiertos, PRs abiertos o issues cerrados para los que no se pudo verificar un PR fusionado mediante esa referencia.</p>
-      <p class="note">GitHub puede cerrar un issue mediante referencias incluidas en la descripción o título del PR. Si el PR no contiene una referencia de cierre reconocible, aparecerá como “Cerrado sin PR verificado” y no se contará automáticamente.</p>
+      <p><strong>Cuenta 1 issue:</strong> el issue está asignado a tu usuario y está cerrado, aunque no se encuentre un PR enlazado.</p>
+      <p><strong>El explorador distingue:</strong> “Cerrado · PR fusionado” cuando se reconoce una referencia de cierre en un PR fusionado, y “Cerrado (sin PR enlazado)” cuando no se encuentra esa referencia.</p>
+      <p class="note">Las referencias reconocidas incluyen <code>Fixes #123</code>, <code>Closes: #123, #124</code> y <code>Resolves #123</code>. Se revisan hasta 500 issues asignados y 600 PR cerrados por repositorio.</p>
     </div>
   </details>
 
   <section class="panel">
     <h2>Conexión con GitHub</h2>
-    <p class="desc">Escribe tu usuario de GitHub y pulsa sincronizar. El panel también intenta actualizar los datos al abrirse y cada 5 minutos.</p>
+    <p class="desc">Escribe tu usuario de GitHub y pulsa sincronizar. El panel también intenta actualizar los datos al abrirse y cada 30 minutos.</p>
     <div class="settings">
       <div class="setting"><label for="user">USUARIO DE GITHUB</label><input id="user" placeholder="tu-usuario" autocomplete="off"></div>
-      <div class="setting"><label for="token">TOKEN (opcional)</label><input id="token" type="password" placeholder="Solo si necesitas acceder a repos privados" autocomplete="off"></div>
+      <div class="setting"><label for="token">TOKEN (opcional)</label><input id="token" type="password" placeholder="Opcional: aumenta el límite de consultas" autocomplete="off"></div>
     </div>
     <div class="row"><button class="primary" id="saveBtn">Guardar y sincronizar</button><span class="status" id="status" aria-live="polite"></span></div>
-    <p class="note">El usuario y los resultados se guardan en este navegador; el token solo se usa durante esta sesión y no se guarda al recargar. No compartas tu token ni lo subas al repositorio. Para repositorios públicos, prueba primero sin token.</p>
+    <p class="note">El usuario, los resultados y el token se guardan en este navegador para que siga disponible al recargar. Usa un token personal con permisos mínimos de solo lectura y solo en un equipo de confianza. No lo compartas ni lo subas al repositorio. También puedes dejarlo vacío, pero GitHub puede limitar las consultas.</p>
   </section>
   <div class="footer">CONT ISSUES · FNI · Datos consultados desde la API de GitHub</div>
 </div>

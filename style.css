@@ -360,3 +360,37 @@ details.panel .m {
         grid-template-columns: 1fr;
     }
 }
+
+/* Mejoras del panel de seguimiento */
+.quickstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 22px}
+.quickstat{display:flex;align-items:center;gap:13px;padding:16px 18px;background:#111820;border:1px solid var(--line);border-radius:14px;min-width:0}
+.quick-icon{display:grid;place-items:center;flex:0 0 38px;height:38px;border-radius:11px;background:#212d3a;color:var(--cyan);font-size:22px;font-weight:800}
+.quickstat .label{font-size:10px;color:var(--muted);font-weight:800;letter-spacing:.35px}
+.quick-num{font-size:25px;font-weight:850;margin-top:4px}
+.repo-mini{font-size:11px;color:var(--muted);margin-top:9px;padding-top:8px;border-top:1px solid var(--line)}
+.panel-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.panel-heading h2{margin-bottom:6px}
+.panel-heading .desc{margin-bottom:0}
+.result-count{flex-shrink:0;font-size:11px;color:var(--muted);background:#21262d;padding:7px 9px;border-radius:8px}
+.filters{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;margin-bottom:14px}
+.filters input,.filters select{width:100%;background:#0d1117;color:var(--text);border:1px solid #30363d;border-radius:9px;padding:11px;font:inherit;outline:none}
+.filters input:focus,.filters select:focus{border-color:var(--cyan)}
+.issue-list{display:grid;gap:8px}
+.issue-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px;background:#0e141b;border:1px solid #252d36;border-radius:11px;min-width:0}
+.issue-main{min-width:0}
+.issue-title{font-size:13px;font-weight:750;overflow-wrap:anywhere}
+.issue-title a{color:var(--text);text-decoration:none}
+.issue-title a:hover,.issue-meta a:hover{color:var(--cyan);text-decoration:underline}
+.issue-meta{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6;overflow-wrap:anywhere}
+.issue-meta a{color:var(--cyan);text-decoration:none}
+.pill{flex-shrink:0;font-size:10px;font-weight:750;padding:6px 8px;border-radius:99px;border:1px solid transparent;white-space:nowrap}
+.pill-done{color:#7ee787;background:#12251b;border-color:#245331}
+.pill-review{color:#e3b341;background:#2b2412;border-color:#5b4619}
+.pill-pending{color:#79c0ff;background:#122337;border-color:#234a70}
+.empty{color:var(--muted);font-size:13px;text-align:center;padding:25px 10px}
+.explain{font-size:13px;line-height:1.65;color:#c9d1d9;margin-top:14px}
+.explain p{margin:10px 0}
+.explain code{background:#21262d;padding:2px 5px;border-radius:5px;color:#a5d6ff}
+details.panel summary{line-height:1.5}
+@media(max-width:760px){.quickstats{grid-template-columns:1fr}.filters{grid-template-columns:1fr}.panel-heading{flex-direction:column}.issue-row{align-items:flex-start;flex-direction:column}.pill{align-self:flex-start}}
+@media(max-width:430px){.quickstats{gap:8px}.quickstat{padding:13px}.quick-num{font-size:22px}}

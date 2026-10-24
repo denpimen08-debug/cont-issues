@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#111827">
+<title>CONT ISSUES</title>
+<link rel="icon" type="image/png" href="ICONO/Emblema tecnológico D con código.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="27" height="27" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="5" r="2.2"/><circle cx="18" cy="19" r="2.2"/><circle cx="18" cy="5" r="2.2"/><path d="M8.2 5H13a5 5 0 0 1 5 5v6.8M6 7.2v5.3a4.5 4.5 0 0 0 4.5 4.5H15.8"/></svg></div>
+    <div><div class="eyebrow">UTO - FNI</div><h1>Panel de Issues</h1><div class="sub">Sincronizado con GitHub · mínimo de 40 issues.</div></div></div>
+    <div class="actions"><button id="syncBtn" class="primary">⟳ Sincronizar ahora</button><button id="exportBtn">Exportar copia</button><button id="resetBtn" class="danger">Reiniciar</button></div>
+  </header>
+
+  <section class="stats">
+    <div class="stat"><div class="label">TOTAL ISSUES</div><div class="num" id="total">0</div><div class="hint" id="syncedAt">Sin sincronizar</div></div>
+    <div class="stat"><div class="label">FALTAN PARA 40</div><div class="num" id="remaining">40</div><div class="hint" id="goalHint">Issues para alcanzar el mínimo</div><div class="progress"><div class="bar" id="progress"></div></div></div>
+    <div class="stat"><div class="label">PROGRESO</div><div class="num" id="percent">0%</div><div class="hint">Avance respecto al mínimo de 40</div></div>
+  </section>
+
+  <div class="sectionhead"><h2>Repositorios</h2><p>Issues asignados a ti y ya cerrados/fusionados, directo de GitHub.</p></div>
+  <section class="repos" id="repos"></section>
+  <details class="panel" id="detail"></details>
+
+  <section class="panel">
+    <h2>Seguimiento</h2>
+    <div class="settings">
+      <div class="stat" style="box-shadow:none"><div class="label">ASIGNADOS (abiertos)</div><div class="num" id="assigned">0</div></div>
+      <div class="stat" style="box-shadow:none"><div class="label">EN REVISIÓN (PRs abiertos)</div><div class="num" id="review">0</div></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Conexión con GitHub</h2>
+    <p class="desc">Escribe tu usuario y pulsa sincronizar. Después se actualiza solo al abrir la página y cada 5 minutos: issues hechos (cerrados), asignados abiertos y PRs en revisión.</p>
+    <div class="settings">
+      <div class="setting"><label for="user">USUARIO DE GITHUB</label><input id="user" placeholder="tu-usuario" autocomplete="off"></div>
+      <div class="setting"><label for="token">TOKEN (opcional, solo si los repos son privados)</label><input id="token" type="password" placeholder="github_pat_..." autocomplete="off"></div>
+    </div>
+    <div class="row"><button class="primary" id="saveBtn">Sincronizar</button><span class="status" id="status" aria-live="polite"></span></div>
+    <p class="note">Los datos y el token se guardan solo en este navegador. Los nombres de los repositorios están en la constante REPOS del script.</p>
+  </section>
+  <div class="footer">UTO - FNI · Sincronización con la API pública de GitHub</div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script src="script.js"></script>
+</body>
+</html>

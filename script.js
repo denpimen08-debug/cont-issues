@@ -5,7 +5,7 @@
   const fresh=()=>({cfg:{user:'',token:''},repos:Object.fromEntries(names.map(n=>[n,{done:0,assigned:0,review:0,merged:0}])),errors:{},detail:[],syncedAt:null});
   let state=load(),syncing=false;
   function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||'null'),d=fresh();if(!s)return d;return {...d,...s,cfg:{...d.cfg,...s.cfg},repos:{...d.repos,...s.repos},errors:{}};}catch(e){return fresh();}}
-  function persist(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+  function persist(){try{const saved={...state,cfg:{...state.cfg,token:''}};localStorage.setItem(KEY,JSON.stringify(saved));}catch(e){}}
   const total=()=>names.reduce((a,n)=>a+(state.repos[n]?.done||0),0);
   const norm=x=>String(x).toLowerCase().replace(/[^a-z0-9]/g,'');
   const esc=x=>String(x??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));

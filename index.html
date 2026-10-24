@@ -47,20 +47,12 @@
     <div class="panel-heading"><div><h2>Explorador de issues y PRs</h2><p class="desc">Busca por título, número o repositorio y filtra por estado. Cada enlace abre el elemento original en GitHub.</p></div><span class="result-count" id="detailCount">0 resultados</span></div>
     <div class="filters">
       <div class="setting"><label for="filterText">BUSCAR</label><input id="filterText" placeholder="Ej. documentación, #123, CHUSPAPULSE" autocomplete="off"></div>
-      <div class="setting"><label for="filterStatus">ESTADO</label><select id="filterStatus"><option value="all">Todos los estados</option><option value="done">Resueltos verificados</option><option value="pending">Issues pendientes</option><option value="review">PR abiertos/en revisión</option><option value="closed-unverified">Cerrados sin PR verificado</option></select></div>
+      <div class="setting"><label for="filterStatus">ESTADO</label><select id="filterStatus"><option value="all">Todos los estados</option><option value="done">Resueltos verificados</option><option value="pending">Issues pendientes</option><option value="review">PR abiertos/en revisión</option></select></div>
     </div>
     <div id="detailList" class="issue-list"><p class="empty">Conecta tu usuario de GitHub y sincroniza para ver los datos.</p></div>
   </section>
 
-  <details class="panel">
-    <summary>¿Cómo se calcula el progreso?</summary>
-    <div class="explain">
-      <p><strong>Cuenta 1 issue:</strong> el issue está asignado a tu usuario, está cerrado y se encuentra una referencia de cierre estándar en un PR fusionado del mismo repositorio (por ejemplo, <code>Fixes #123</code>, <code>Closes #123</code> o <code>Resolves #123</code>).</p>
-      <p><strong>No suma todavía:</strong> issues abiertos, PRs abiertos o issues cerrados para los que no se pudo verificar un PR fusionado mediante esa referencia.</p>
-      <p class="note">GitHub puede cerrar un issue mediante referencias incluidas en la descripción o título del PR. Si el PR no contiene una referencia de cierre reconocible, aparecerá como “Cerrado sin PR verificado” y no se contará automáticamente.</p>
-    </div>
-  </details>
-
+  
   <div class="footer">CONT ISSUES · FNI · Datos consultados desde la API de GitHub</div>
 </div>
 <div class="toast" id="toast" role="status"></div>

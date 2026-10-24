@@ -101,11 +101,9 @@
           const allClosedIssues=closedIssues.filter(x=>!x.pull_request&&x.state==='closed');
           const personalIssues=assignedIssues.filter(x=>!x.pull_request);
           const open=personalIssues.filter(x=>x.state==='open');
-          const verified=closed.filter(issue=>links.has(issue.number));
-          const verifiedSet=new Set(verified.map(x=>x.number));
           const myOpenPrs=openPrs.filter(pr=>pr.user?.login?.toLowerCase()===user.toLowerCase());
           const myMergedPrs=mergedPrs.filter(pr=>pr.user?.login?.toLowerCase()===user.toLowerCase());
-          // El contador suma todos los issues cerrados asignados al usuario.
+          // El contador suma todos los issues cerrados del repositorio.
           newRepos[label]={done:allClosedIssues.length,assigned:open.length,review:myOpenPrs.length,merged:myMergedPrs.length};
           for(const issue of allClosedIssues){
             const pr=links.get(issue.number);

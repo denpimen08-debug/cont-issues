@@ -67,18 +67,18 @@
       for(const label of names){
         const repoName=REPOS[label];
         try{
-          const [closedIssues,openIssues,openPrs,closedPrs]=await Promise.all([
+          const [closedIssues,openIssues,openPrs,mergedResult]=await Promise.all([
             fetchRepoItems('/repos/'+OWNER+'/'+repoName+'/issues?state=closed&assignee='+encodeURIComponent(user)),
             fetchRepoItems('/repos/'+OWNER+'/'+repoName+'/issues?state=open&assignee='+encodeURIComponent(user)),
             fetchRepoItems('/repos/'+OWNER+'/'+repoName+'/pulls?state=open'),
-            fetchRepoItems('/repos/'+OWNER+'/'+repoName+'/pulls?state=closed')
+            api('/search/issues?per_page=1&q='+encodeURIComponent('repo:'+OWNER+'/'+repoName+' is:pr is:merged author:'+user))
           ]);
           const completed=closedIssues.filter(x=>!x.pull_request);
           const pending=openIssues.filter(x=>!x.pull_request);
           const review=openPrs.filter(x=>x.user?.login?.toLowerCase()===user.toLowerCase());
-          const merged=closedPrs.filter(x=>x.merged_at&&x.user?.login?.toLowerCase()===user.toLowerCase());
-          newRepos[label]={done:completed.length,assigned:pending.length,review:review.length,merged:merged.length};
-          totalAssigned+=pending.length;totalReview+=review.length;totalMerged+=merged.length;
+          const merged=mergedResult.total_count||0;
+          newRepos[label]={done:completed.length,assigned:pending.length,review:review.length,merged:merged};
+          totalAssigned+=pending.length;totalReview+=review.length;totalMerged+=merged;
           for(const issue of completed)detail.push({number:issue.number,title:issue.title,url:issue.html_url,repo:label,status:'done',statusLabel:'Issue cerrado',prUrl:''});
           for(const issue of pending)detail.push({number:issue.number,title:issue.title,url:issue.html_url,repo:label,status:'pending',statusLabel:'Issue asignado pendiente',prUrl:''});
           for(const pr of review)detail.push({number:pr.number,title:pr.title,url:pr.html_url,repo:label,status:'review',statusLabel:'PR abierto/en revisión',prUrl:''});

@@ -1,7 +1,9 @@
 
 # 🚀 CONT ISSUES
 
-Plataforma web desarrollada para consultar y dar seguimiento a los issues de los repositorios académicos de la carrera de Ingeniería de Sistemas e Informática de la Facultad Nacional de Ingeniería (FNI), facilitando la organización y el control de las actividades y tareas relacionadas con los proyectos académicos.
+Plataforma web desarrollada para consultar y dar seguimiento a los issues de los repositorios académicos de la carrera de Ingeniería de Sistemas e Informática de la Facultad Nacional de Ingeniería (FNI).
+
+**Repositorio académico de SIS-INF:** [https://github.com/sis-inf](https://github.com/sis-inf)
 
 ## 🌐 Acceso a la página
 

@@ -5,7 +5,7 @@
   const fresh=()=>({cfg:{user:'',token:''},repos:Object.fromEntries(names.map(n=>[n,{done:0,assigned:0,review:0,merged:0}])),errors:{},detail:[],syncedAt:null});
   let state=load(),syncing=false;
   function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||'null'),d=fresh();if(!s)return d;return {...d,...s,cfg:{...d.cfg,...s.cfg},repos:{...d.repos,...s.repos},errors:{}};}catch(e){return fresh();}}
-  function persist(){try{localStorage.setItem(KEY,JSON.stringify({...state,cfg:{...state.cfg,token:''}}));}catch(e){}}
+  function persist(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
   const total=()=>names.reduce((a,n)=>a+(state.repos[n]?.done||0),0);
   const norm=x=>String(x).toLowerCase().replace(/[^a-z0-9]/g,'');
   const esc=x=>String(x??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -27,6 +27,18 @@
     return r.json();
   }
   const repoApi=(repo,path)=>api('/repos/'+OWNER+'/'+repo+path);
+  // Recorre páginas para no perder issues o PR antiguos.
+  async function repoApiAll(repo,path,maxPages){
+    const out=[];
+    for(let page=1;page<=maxPages;page++){
+      const separator=path.includes('?')?'&':'?';
+      const chunk=await repoApi(repo,path+separator+'per_page=100&page='+page);
+      if(!Array.isArray(chunk))throw new Error('Respuesta inesperada de GitHub.');
+      out.push(...chunk);
+      if(chunk.length<100)break;
+    }
+    return out;
+  }
   function renderRepos(){
     $('repos').innerHTML=names.map((n,i)=>'<article class="repo"><div class="repo-top"><h3>'+esc(n)+'</h3><div class="repo-icon">'+String(i+1).padStart(2,'0')+'</div></div><div class="count" id="count-'+i+'">0</div><small id="msg-'+i+'">Issues verificados</small><div class="repo-mini" id="mini-'+i+'"></div></article>').join('');
   }
@@ -43,55 +55,93 @@
   }
   function renderDetail(){
     const term=($('filterText')?.value||'').toLowerCase().trim(),status=$('filterStatus')?.value||'all';
-    const rows=state.detail.filter(x=>(status==='all'||x.status===status)&&(!term||(x.title+' '+x.repo+' '+x.number).toLowerCase().includes(term)));
+    const rows=state.detail.filter(x=>(status==='all'||x.status===status||(status==='done'&&x.status==='closed-unverified'))&&(!term||(x.title+' '+x.repo+' '+x.number).toLowerCase().includes(term)));
     $('detailCount').textContent=rows.length+' resultados';
     $('detailList').innerHTML=rows.length?rows.map(x=>'<article class="issue-row"><div class="issue-main"><div class="issue-title"><a href="'+esc(x.url)+'" target="_blank" rel="noopener">#'+x.number+' · '+esc(x.title)+'</a></div><div class="issue-meta">'+esc(x.repo)+' · '+esc(x.statusLabel)+(x.prUrl?' · <a href="'+esc(x.prUrl)+'" target="_blank" rel="noopener">Ver PR fusionado</a>':'')+'</div></div><span class="pill '+(x.status==='done'?'pill-done':x.status==='review'?'pill-review':'pill-pending')+'">'+esc(x.statusLabel)+'</span></article>').join(''):'<p class="empty">No hay resultados para este filtro. Sincroniza para actualizar los datos.</p>';
   }
+  // Reconoce «Closes #1», «Closes: #1, #2» y referencias con repositorio.
   function closingRefs(text,prRepo){
-    const refs=new Set(),re=/(?:close[sd]?|fix(?:es|ed)?|resolve[sd]?)\s+(?:([\w.-]+)\/([\w.-]+))?#(\d+)/gi;let m;
-    while((m=re.exec(text||''))!==null){if(!m[2]||norm(m[2])===norm(prRepo))refs.add(Number(m[3]));}
+    const refs=new Set();
+    const kw=/\b(?:close[sd]?|fix(?:es|ed)?|resolve[sd]?)\b:?\s+((?:(?:[\w.-]+\/[\w.-]+)?#\d+(?:\s*(?:,|&|y|and)\s*)?)+)/gi;
+    let m;
+    while((m=kw.exec(text||''))!==null){
+      const ref=/(?:([\w.-]+)\/([\w.-]+))?#(\d+)/g;
+      let r;
+      while((r=ref.exec(m[1]))!==null){
+        if(!r[2]||norm(r[2])===norm(prRepo))refs.add(Number(r[3]));
+      }
+    }
     return refs;
   }
   async function sync(manual){
-    const user=state.cfg.user;if(!user){if(manual)setStatus('Escribe tu usuario de GitHub primero.',true);return;}
-    if(syncing)return;syncing=true;$('syncBtn').disabled=true;setStatus('Consultando repositorios (API estándar de GitHub)…');state.errors={};
+    const user=state.cfg.user;
+    if(!user){if(manual)setStatus('Escribe tu usuario de GitHub primero.',true);return;}
+    if(syncing)return;
+    syncing=true;
+    $('syncBtn').disabled=true;
+    setStatus('Consultando repositorios…');
+    state.errors={};
     try{
-      const newRepos={},detail=[];
+      await checkRate();
+      const newRepos={},detailByRepo={};
       for(const label of names){
         const repo=REPOS[label];
         try{
-          // Usa la API estándar de repositorios, no el endpoint de búsqueda que tiene un límite mucho menor.
           const [issues,closedPrs,openPrs]=await Promise.all([
-            repoApi(repo,'/issues?state=all&assignee='+encodeURIComponent(user)+'&per_page=100'),
-            repoApi(repo,'/pulls?state=closed&per_page=100&sort=updated&direction=desc'),
+            repoApiAll(repo,'/issues?state=all&assignee='+encodeURIComponent(user),5),
+            repoApiAll(repo,'/pulls?state=closed&sort=updated&direction=desc',6),
             repoApi(repo,'/pulls?state=open&per_page=100&sort=updated&direction=desc')
           ]);
+          const detail=[];
           const mergedPrs=closedPrs.filter(pr=>pr.merged_at);
           const links=new Map();
           for(const pr of mergedPrs){
             for(const num of closingRefs((pr.title||'')+'\n'+(pr.body||''),repo))links.set(num,pr);
           }
           const assignedIssues=issues.filter(x=>!x.pull_request);
-          const closed=assignedIssues.filter(x=>x.state==='closed'),open=assignedIssues.filter(x=>x.state==='open');
-          const done=closed.filter(issue=>links.has(issue.number)),doneSet=new Set(done.map(x=>x.number));
+          const closed=assignedIssues.filter(x=>x.state==='closed');
+          const open=assignedIssues.filter(x=>x.state==='open');
+          const verified=closed.filter(issue=>links.has(issue.number));
+          const verifiedSet=new Set(verified.map(x=>x.number));
           const myOpenPrs=openPrs.filter(pr=>pr.user?.login?.toLowerCase()===user.toLowerCase());
           const myMergedPrs=mergedPrs.filter(pr=>pr.user?.login?.toLowerCase()===user.toLowerCase());
-          newRepos[label]={done:done.length,assigned:open.length,review:myOpenPrs.length,merged:myMergedPrs.length};
-          for(const issue of done){const pr=links.get(issue.number);detail.push({number:issue.number,title:issue.title,url:issue.html_url,repo:label,status:'done',statusLabel:'Resuelto verificado',prUrl:pr.html_url});}
-          for(const issue of closed.filter(x=>!doneSet.has(x.number)))detail.push({number:issue.number,title:issue.title,url:issue.html_url,repo:label,status:'closed-unverified',statusLabel:'Cerrado · PR no verificado',prUrl:''});
-          for(const issue of open)detail.push({number:issue.number,title:issue.title,url:issue.html_url,repo:label,status:'pending',statusLabel:'Pendiente',prUrl:''});
-          for(const pr of myOpenPrs)detail.push({number:pr.number,title:pr.title,url:pr.html_url,repo:label,status:'review',statusLabel:'PR abierto/en revisión',prUrl:''});
+          // El contador suma todos los issues cerrados asignados al usuario.
+          newRepos[label]={done:closed.length,assigned:open.length,review:myOpenPrs.length,merged:myMergedPrs.length};
+          for(const issue of verified){
+            const pr=links.get(issue.number);
+            detail.push({number:issue.number,title:issue.title,url:issue.html_url,repo:label,status:'done',statusLabel:'Cerrado · PR fusionado',prUrl:pr.html_url});
+          }
+          for(const issue of closed.filter(x=>!verifiedSet.has(x.number))){
+            detail.push({number:issue.number,title:issue.title,url:issue.html_url,repo:label,status:'closed-unverified',statusLabel:'Cerrado (sin PR enlazado)',prUrl:''});
+          }
+          for(const issue of open){
+            detail.push({number:issue.number,title:issue.title,url:issue.html_url,repo:label,status:'pending',statusLabel:'Pendiente',prUrl:''});
+          }
+          for(const pr of myOpenPrs){
+            detail.push({number:pr.number,title:pr.title,url:pr.html_url,repo:label,status:'review',statusLabel:'PR abierto/en revisión',prUrl:''});
+          }
+          detailByRepo[label]=detail;
         }catch(e){
           state.errors[label]=e.message;
           newRepos[label]=state.repos[label]||{done:0,assigned:0,review:0,merged:0};
+          detailByRepo[label]=state.detailByRepo?.[label]||[];
         }
       }
-      state.repos={...state.repos,...newRepos};state.detail=detail;state.syncedAt=Date.now();persist();render();
+      state.repos={...state.repos,...newRepos};
+      state.detailByRepo=detailByRepo;
+      state.detail=names.flatMap(n=>state.detailByRepo[n]||[]);
+      state.syncedAt=Date.now();
+      persist();
+      render();
       const errs=Object.keys(state.errors).length;
       setStatus(errs?'Sincronización parcial: '+errs+' repositorio(s) con error. Revisa los mensajes.':'✓ Sincronización completada',!!errs);
       if(manual&&!errs)toast('Datos actualizados correctamente.');
-    }catch(e){setStatus(e.message,true);}
-    finally{syncing=false;$('syncBtn').disabled=false;}
+    }catch(e){
+      setStatus(e.message,true);
+    }finally{
+      syncing=false;
+      $('syncBtn').disabled=false;
+    }
   }
   $('saveBtn').addEventListener('click',()=>{state.cfg={user:$('user').value.trim().replace(/^@/,''),token:$('token').value.trim()};persist();sync(true);});
   $('syncBtn').addEventListener('click',()=>sync(true));

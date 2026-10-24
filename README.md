@@ -1,7 +1,7 @@
 
 # 🚀 CONT ISSUES
 
-Página web para consultar y dar seguimiento a issues de GitHub, con una interfaz sencilla y organizada.
+Plataforma web desarrollada para consultar y dar seguimiento a los issues de los repositorios académicos de la carrera de Ingeniería de Sistemas e Informática de la Facultad Nacional de Ingeniería (FNI), facilitando la organización y el control de las actividades y tareas relacionadas con los proyectos académicos.
 
 ## 🌐 Acceso a la página
 

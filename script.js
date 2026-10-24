@@ -43,11 +43,6 @@
     $('detailCount').textContent=rows.length+' resultados';
     $('detailList').innerHTML=rows.length?rows.map(x=>'<article class="issue-row"><div class="issue-main"><div class="issue-title"><a href="'+esc(x.url)+'" target="_blank" rel="noopener">#'+x.number+' · '+esc(x.title)+'</a></div><div class="issue-meta">'+esc(x.repo)+' · '+esc(x.statusLabel)+(x.prUrl?' · <a href="'+esc(x.prUrl)+'" target="_blank" rel="noopener">Ver PR fusionado</a>':'')+'</div></div><span class="pill '+(x.status==='done'?'pill-done':x.status==='review'?'pill-review':'pill-pending')+'">'+esc(x.statusLabel)+'</span></article>').join(''):'<p class="empty">No hay resultados para este filtro. Sincroniza para actualizar los datos.</p>';
   }
-  function closingRefs(text,prRepo){
-    const refs=new Set(),re=/(?:close[sd]?|fix(?:es|ed)?|resolve[sd]?)\s+(?:([\w.-]+)\/([\w.-]+))?#(\d+)/gi;let m;
-    while((m=re.exec(text||''))!==null){if(!m[2]||norm(m[2])===norm(prRepo))refs.add(Number(m[3]));}
-    return refs;
-  }
   function repoKey(item,byNorm){
     const repo=String(item.repository_url||'').split('/').pop();return byNorm[norm(repo)]||null;
   }

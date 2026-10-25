@@ -17,6 +17,17 @@
     <div class="actions"><button id="syncBtn" class="primary">⟳ Sincronizar ahora</button><button id="exportBtn">Exportar copia</button><button id="resetBtn" class="danger">Reiniciar</button></div>
   </header>
 
+  <section class="panel" style="margin:0 0 18px">
+    <h2>Conexión con GitHub</h2>
+    <p class="desc">Escribe tu usuario de GitHub y pulsa sincronizar. El panel también intenta actualizar los datos al abrirse y cada 30 minutos.</p>
+    <div class="settings">
+      <div class="setting"><label for="user">USUARIO DE GITHUB</label><input id="user" placeholder="tu-usuario" autocomplete="off"></div>
+      <div class="setting"><label for="token">TOKEN (opcional)</label><input id="token" type="password" placeholder="No hace falta para repos públicos" autocomplete="off"></div>
+    </div>
+    <div class="row"><button class="primary" id="saveBtn">Guardar y sincronizar</button><span class="status" id="status" aria-live="polite"></span></div>
+    <p class="note">El usuario y los resultados se guardan en este navegador; el token solo se usa durante esta sesión y no se guarda al recargar. No compartas tu token ni lo subas al repositorio. Los repos de SIS-INF son públicos: déjalo vacío. Si el token no tiene acceso a la organización, se ignora automáticamente.</p>
+  </section>
+
   <section class="stats">
     <div class="stat"><div class="label">ISSUES HECHOS (CERRADOS)</div><div class="num" id="total">0</div><div class="hint" id="syncedAt">Sin sincronizar</div></div>
     <div class="stat"><div class="label">FALTAN PARA 40</div><div class="num" id="remaining">40</div><div class="hint" id="goalHint">Issues para alcanzar el mínimo</div><div class="progress"><div class="bar" id="progress"></div></div></div>
@@ -26,7 +37,7 @@
   <section class="quickstats">
     <div class="quickstat"><span class="quick-icon">◷</span><div><div class="label">ISSUES PENDIENTES</div><div class="quick-num" id="assigned">0</div></div></div>
     <div class="quickstat"><span class="quick-icon">⇄</span><div><div class="label">TUS PR ABIERTOS</div><div class="quick-num" id="review">0</div></div></div>
-    <div class="quickstat"><span class="quick-icon">✓</span><div><div class="label">PR FUSIONADOS POR TI</div><div class="quick-num" id="merged">0</div></div></div>
+    <div class="quickstat"><span class="quick-icon">✓</span><div><div class="label">PR FUSIONADOS (COMO AUTOR)</div><div class="quick-num" id="merged">0</div></div></div>
   </section>
 
   <div class="sectionhead"><h2>Resumen por repositorio</h2><p>Cuenta lo que tienes asignado y ya está cerrado o fusionado en GitHub.</p></div>
@@ -41,16 +52,6 @@
     <div id="detailList" class="issue-list"><p class="empty">Conecta tu usuario de GitHub y sincroniza para ver los datos.</p></div>
   </section>
 
-  <section class="panel">
-    <h2>Conexión con GitHub</h2>
-    <p class="desc">Escribe tu usuario de GitHub y pulsa sincronizar. El panel también intenta actualizar los datos al abrirse y cada 30 minutos.</p>
-    <div class="settings">
-      <div class="setting"><label for="user">USUARIO DE GITHUB</label><input id="user" placeholder="tu-usuario" autocomplete="off"></div>
-      <div class="setting"><label for="token">TOKEN (opcional)</label><input id="token" type="password" placeholder="No hace falta para repos públicos" autocomplete="off"></div>
-    </div>
-    <div class="row"><button class="primary" id="saveBtn">Guardar y sincronizar</button><span class="status" id="status" aria-live="polite"></span></div>
-    <p class="note">El usuario y los resultados se guardan en este navegador; el token solo se usa durante esta sesión y no se guarda al recargar. No compartas tu token ni lo subas al repositorio. Los repos de SIS-INF son públicos: déjalo vacío. Si el token no tiene acceso a la organización, se ignora automáticamente.</p>
-  </section>
   <div class="footer">CONT ISSUES · FNI · Datos consultados desde la API de GitHub</div>
 </div>
 <div class="toast" id="toast" role="status"></div>
